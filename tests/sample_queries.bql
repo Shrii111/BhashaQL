@@ -1,0 +1,105 @@
+-- BhashaQL Sample Queries
+-- Demonstrating all SQL categories
+
+-- DDL: Data Definition Language
+banaye table students (
+    id number,
+    name text,
+    age number,
+    grade text
+);
+
+banaye table courses (
+    course_id number,
+    course_name text,
+    credits number
+);
+
+banaye table enrollments (
+    enrollment_id number,
+    student_id number,
+    course_id number,
+    semester text
+);
+
+-- DML: Data Manipulation Language
+
+-- Insert data
+daalen mein students values (1, "Aman Kumar", 20, "A");
+daalen mein students values (2, "Priya Sharma", 21, "B");
+daalen mein students values (3, "Rahul Verma", 19, "A");
+
+daalen mein courses values (101, "Computer Science", 4);
+daalen mein courses values (102, "Mathematics", 3);
+daalen mein courses values (103, "Physics", 4);
+
+daalen mein enrollments values (1, 1, 101, "Fall 2024");
+daalen mein enrollments values (2, 1, 102, "Fall 2024");
+daalen mein enrollments values (3, 2, 101, "Fall 2024");
+daalen mein enrollments values (4, 2, 103, "Fall 2024");
+
+-- DQL: Data Query Language
+
+-- Basic SELECT
+laye * se students;
+
+-- SELECT with WHERE clause
+laye name, age se students jahan age > 18;
+
+-- SELECT with ORDER BY
+laye * se students kram dwara age desc;
+
+-- SELECT with aggregate functions
+laye count(*) se students;
+laye avg(age) se students;
+laye max(age) se students;
+
+-- Complex query with JOIN
+laye s.name, c.course_name 
+se students s, enrollments e, courses c 
+jahan s.id = e.student_id aur e.course_id = c.course_id;
+
+-- DML: Update and Delete
+
+-- UPDATE statement
+badlein students set karein grade = "A+" jahan id = 1;
+
+-- DELETE statement
+mitayein se enrollments jahan semester = "Spring 2024";
+
+-- DCL: Data Control Language
+
+-- GRANT permissions (simulated)
+deejaye select, insert on students to user1;
+deejaye all on courses to admin;
+
+-- REVOKE permissions (simulated)
+wapas insert on students from user1;
+
+-- Advanced queries
+
+-- Subquery
+laye * se students jahan id in (
+    laye student_id se enrollments jahan course_id = 101
+);
+
+-- GROUP BY and HAVING
+laye grade, count(*) se students 
+group dwara grade 
+jahan count(*) > 1;
+
+-- Multiple conditions
+laye * se students 
+jahan age >= 18 aur age <= 25 aur grade = "A";
+
+-- String operations
+laye * se students jahan name like "% Kumar";
+
+-- Mathematical operations
+laye name, age + 5 se students jahan age < 20;
+
+-- Transaction simulation
+shuru karein transaction;
+daalen mein students values (4, "Neha Patel", 22, "B");
+badlein students set karein age = 23 jahan id = 4;
+commit karein;

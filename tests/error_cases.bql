@@ -1,0 +1,19 @@
+-- BhashaQL Error Cases for Testing
+
+-- Syntax Errors
+banaye table students (id);  -- Missing data type
+laye *;  -- Missing FROM clause
+:daalen mein students;  -- Missing VALUES clause
+
+-- Semantic Errors
+banaye table students (id number, id number);  -- Duplicate column
+laye invalid_column se students;  -- Column doesn't exist
+:daalen mein non_existent_table values (1, "test");  -- Table doesn't exist
+
+-- Type Mismatches
+daalen mein students values ("not_a_number", "test");  -- Wrong data type
+laye * se students jahan name = 123;  -- String vs number comparison
+
+-- Runtime Errors
+mitayein se students jahan id = 99999;  -- Should succeed but affect 0 rows
+badlein students set karein invalid_column = "value" jahan id = 1;  -- Invalid column
