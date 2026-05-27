@@ -8,7 +8,7 @@ import sys
 import os
 import json
 from typing import Dict, Any, List
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify, render_template_string, send_from_directory
 from flask_cors import CORS
 
 # Add compiler to path
@@ -730,7 +730,7 @@ Examples:
 @app.route('/')
 def index():
     """Serve the main web interface"""
-    return render_template_string(HTML_TEMPLATE)
+    return send_from_directory('web', 'index.html')
 
 @app.route('/api/compile', methods=['POST'])
 def compile_query():

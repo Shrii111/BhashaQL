@@ -299,14 +299,14 @@
 
 Examples:
 • banaye table students (id number, name text, age number);
-• laye * from students jahan age > 18;
-• put mein students values (1, 'Aman', 20);"></textarea>
+• laye * se students jahan age > 18;
+• daalen mein students values (1, 'Aman', 20);"></textarea>
                 
                 <div class="button-group">
                     <button onclick="executeQuery()" class="btn-primary">🔥 Execute Query</button>
                     <button onclick="clearInput()" class="btn-secondary">🗑️ Clear</button>
                     <button onclick="showExamples()" class="btn-example">💡 Examples</button>
-                    <button onclick="showTables()" class="btn-example">📋 Show Tables</button>
+                    <button onclick="showTables()" class="btn-example" style="background: #ff6b6b;">📋 Show Tables</button>
                 </div>
                 
                 <div class="examples" id="examples" style="display: none;">
@@ -314,8 +314,8 @@ Examples:
                     <div class="example-item" onclick="setExample('banaye table employees (id number, name text, department text, salary number);')">
                         banaye table employees (id number, name text, department text, salary number);
                     </div>
-                    <div class="example-item" onclick="setExample('put mein employees values (1, &quot;Rahul&quot;, &quot;IT&quot;, 50000);')">
-                        put mein employees values (1, "Rahul", "IT", 50000);
+                    <div class="example-item" onclick="setExample('daalen mein employees values (1, &quot;Rahul&quot;, &quot;IT&quot;, 50000);')">
+                        daalen mein employees values (1, "Rahul", "IT", 50000);
                     </div>
                     <div class="example-item" onclick="setExample('laye * se employees jahan salary &gt; 40000;')">
                         laye * se employees jahan salary > 40000;
@@ -631,20 +631,90 @@ Examples:
             .then(data => {
                 loading.style.display = 'none';
                 let html = '<strong>📋 Database Tables:</strong><br><br>';
+                html += '<small>Click on a table name to view its contents</small><br><br>';
                 
-                if (data.success && data.tables.length > 0) {
+                if (data.success && data.tables && data.tables.length > 0) {
                     data.tables.forEach(table => {
-                        html += `🗂️ ${table}<br>`;
+                        html += `<span class="example-item" onclick="showTableContents('${table}')" style="display: inline-block; padding: 8px 12px; margin: 4px;">🗂️ ${table}</span><br>`;
                     });
+                    html += `<br><small>Total tables: ${data.tables.length}</small>`;
+                } else if (data.success && (!data.tables || data.tables.length === 0)) {
+                    html += 'No tables found. Create a table first!<br><br>';
+                    html += '<small>Try: banaye table students (id number, name text);</small>';
                 } else {
-                    html += 'No tables found. Create a table first!';
+                    html += '<span class="error">Error fetching tables</span>';
+                    if (data.error) {
+                        html += `<br><small>${data.error}</small>`;
+                    }
                 }
                 
                 output.innerHTML = html;
             })
             .catch(error => {
                 loading.style.display = 'none';
-                output.innerHTML = '<span class="error">Error fetching tables: ' + error.message + '</span>';
+                output.innerHTML = '<span class="error">Network Error: Could not connect to server</span><br>';
+                output.innerHTML += '<small>Make sure the backend is running on port 5000</small>';
+                console.error('Error fetching tables:', error);
+            });
+        }
+        
+        function showTableContents(tableName) {
+            const loading = document.getElementById('loading');
+            const output = document.getElementById('output');
+            
+            loading.style.display = 'block';
+            output.textContent = '';
+            
+            const selectQuery = 'laye * se ' + tableName + ';';
+            
+            fetch('http://localhost:5000/api/compile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: selectQuery })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                let html = `<strong>📊 Table: ${tableName}</strong><br><br>`;
+                
+                if (data.success && data.results && data.results.length > 0) {
+                    const result = data.results[0];
+                    
+                    if (result.data && result.data.length > 0) {
+                        html += '<table class="result-table">';
+                        html += '<tr>';
+                        result.columns.forEach(col => {
+                            html += '<th>' + col + '</th>';
+                        });
+                        html += '</tr>';
+                        
+                        result.data.forEach(row => {
+                            html += '<tr>';
+                            result.columns.forEach(col => {
+                                html += '<td>' + (row[col] || '') + '</td>';
+                            });
+                            html += '</tr>';
+                        });
+                        html += '</table>';
+                        html += '<small>Rows: ' + result.row_count + '</small>';
+                    } else {
+                        html += '<em>Table is empty</em>';
+                    }
+                } else {
+                    html += '<span class="error">Error fetching table contents</span>';
+                    if (data.errors && data.errors.length > 0) {
+                        html += '<br><small>' + data.errors.join('<br>') + '</small>';
+                    }
+                }
+                
+                output.innerHTML = html;
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                output.innerHTML = '<span class="error">Network Error: Could not fetch table contents</span>';
+                console.error('Error fetching table contents:', error);
             });
         }
         
