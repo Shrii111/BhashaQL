@@ -1,0 +1,254 @@
+BhashaQL User Guide
+====================
+
+This guide explains BhashaQL's Hinglish query language, keyword mapping, supported features, and example queries.
+Use it as a reference for writing queries, creating tables, inserting data, updating rows, deleting rows, and querying multiple tables.
+
+Table of Contents
+-----------------
+1. Overview
+2. Supported Keywords
+3. Data Types
+4. Statement Types
+   - Create Table
+   - Drop Table
+   - Alter Table
+   - Insert
+   - Update
+   - Delete
+   - Select
+   - Join-style Queries
+   - Aggregate Queries
+   - Subqueries
+   - DCL (Grant/Revoke)
+5. Example Workflows
+6. Syntax Notes
+7. Quick Reference Table
+8. Tips and Common Errors
+
+1. Overview
+-----------
+BhashaQL is a Hinglish SQL-like compiler. It lets you write queries using Hindi/English keywords and converts them into standard SQL for execution.
+The language is not full natural language, but a structured query syntax with Hinglish keywords such as `laye`, `se`, `jahan`, and `daalen`.
+
+2. Supported Keywords
+---------------------
+Hinglish Keyword       | Meaning            | Usage Example
+----------------------|--------------------|---------------------------------------------
+banaye                | CREATE             | banaye table students (...);
+hataye                | DROP               | hataye table students;
+badliye               | ALTER              | badliye table students add column age number;
+laye                  | SELECT             | laye * se students;
+se                    | FROM               | laye * se students;
+jahan                 | WHERE              | laye * se students jahan age > 18;
+daalen                | INSERT             | daalen mein students values (...);
+mein                  | INTO               | daalen mein students values (...);
+values                | VALUES             | daalen mein students values (...);
+badlein               | UPDATE             | badlein students set karein age = 20 jahan id = 1;
+set                   | SET                | badlein students set karein age = 20;
+karein                | verb filler        | badlein students set karein age = 20;
+mitayein              | DELETE             | mitayein se students jahan age < 18;
+group                 | GROUP              | laye grade, count(*) se students group dwara grade;
+dwara                 | BY                 | group dwara grade
+kram                  | ORDER              | laye * se students kram dwara age desc;
+aur                   | AND                | jahan age > 18 aur grade = "A";
+ya                    | OR                 | jahan age < 18 ya grade = "A";
+nahin                 | NOT                | jahan nahin age = 20;
+count, sum, avg, max, min | Aggregate functions | laye count(*) se students;
+
+3. Data Types
+-------------
+number   -> numeric values (integers, floats)
+text     -> text or string values
+
+4. Statement Types
+------------------
+
+Create Table
+------------
+Syntax:
+  banaye table <table_name> (<column_name> <type>, ...);
+Example:
+  banaye table students (id number, name text, age number, grade text);
+
+Drop Table
+----------
+Syntax:
+  hataye table <table_name>;
+Example:
+  hataye table students;
+
+Alter Table
+-----------
+Syntax:
+  badliye table <table_name> add column <column_name> <type>;
+Example:
+  badliye table students add column email text;
+
+Insert
+------
+Syntax:
+  daalen mein <table_name> values (<value1>, <value2>, ...);
+Example:
+  daalen mein students values (1, "Aman Kumar", 20, "A");
+
+Update
+------
+Syntax:
+  badlein <table_name> set karein <column> = <value>, ... jahan <condition>;
+Example:
+  badlein students set karein grade = "A+" jahan id = 1;
+
+Delete
+------
+Syntax:
+  mitayein se <table_name> jahan <condition>;
+Example:
+  mitayein se students jahan age < 18;
+
+Select
+------
+Syntax:
+  laye <columns> se <table_name> [jahan <condition>] [group dwara <columns>] [kram dwara <columns> [asc|desc]];
+Notes:
+  - Use `laye *` to select all columns.
+  - Column expressions are supported, e.g. `age + 5`.
+  - Use `count(*)`, `sum(age)`, `avg(age)` for aggregates.
+Example:
+  laye name, age se students jahan age > 18;
+
+Join-style Queries
+------------------
+BhashaQL supports multi-table queries by listing multiple tables after `se` and using join conditions in `jahan`.
+
+Example:
+  laye s.name, c.course_name se students s, enrollments e, courses c jahan s.id = e.student_id aur e.course_id = c.course_id;
+
+Explanation:
+  - `students s` defines alias `s` for table `students`.
+  - `enrollments e` defines alias `e`.
+  - `courses c` defines alias `c`.
+  - The `jahan` clause contains join conditions connecting the tables.
+
+Aggregate Queries
+-----------------
+Syntax:
+  laye <agg_fn>(<column>) se <table_name> [group dwara <column>];
+Example:
+  laye grade, count(*) se students group dwara grade;
+
+Subqueries
+----------
+BhashaQL supports subqueries inside conditions.
+Example:
+  laye * se students jahan id in (laye student_id se enrollments jahan course_id = 101);
+
+DCL (Grant/Revoke)
+------------------
+Grant syntax:
+  deejaye <privilege>, ... on <table> to <user>;
+Example:
+  deejaye select, insert on students to user1;
+
+Revoke syntax:
+  wapas <privilege>, ... on <table> from <user>;
+Example:
+  wapas insert on students from user1;
+
+5. Example Workflows
+---------------------
+-- Step 1: Create tables
+banaye table students (id number, name text, age number, grade text);
+banaye table courses (course_id number, course_name text, credits number);
+banaye table enrollments (enrollment_id number, student_id number, course_id number, semester text);
+
+-- Step 2: Insert data
+daalen mein students values (1, "Aman Kumar", 20, "A");
+daalen mein students values (2, "Priya Sharma", 21, "B");
+daalen mein courses values (101, "Computer Science", 4);
+daalen mein courses values (102, "Mathematics", 3);
+daalen mein enrollments values (1, 1, 101, "Fall 2024");
+
+-- Step 3: Retrieve data
+laye * se students;
+laye name, course_name se students s, enrollments e, courses c jahan s.id = e.student_id aur e.course_id = c.course_id;
+
+-- Step 4: Aggregate data
+laye grade, count(*) se students group dwara grade;
+
+-- Step 5: Change data
+badlein students set karein grade = "A+" jahan id = 1;
+mitayein se enrollments jahan semester = "Spring 2024";
+
+6. Syntax Notes
+----------------
+- Table aliases are supported in select statements, e.g. `students s`.
+- Multiple tables are separated by commas after `se`.
+- Conditions in `jahan` can use `aur`, `ya`, and `nahin`.
+- String values must be quoted with double quotes: `"Aman"`.
+- Use parentheses to group expressions or subqueries.
+
+7. Quick Reference Table
+------------------------
+Hinglish          | SQL Equivalent
+------------------|----------------
+banaye            | CREATE
+hataye            | DROP
+badliye           | ALTER
+table             | TABLE
+column            | COLUMN
+add               | ADD
+laye              | SELECT
+se                | FROM
+jahan             | WHERE
+daalen           | INSERT
+mein              | INTO
+values            | VALUES
+badlein           | UPDATE
+set               | SET
+karein            | verb filler
+mitayein          | DELETE
+aur               | AND
+ya                | OR
+nahin             | NOT
+group             | GROUP
+dwara             | BY
+kram              | ORDER
+desc              | DESC
+asc               | ASC
+count             | COUNT
+avg               | AVG
+sum               | SUM
+max               | MAX
+min               | MIN
+
+8. Tips and Common Errors
+--------------------------
+- Always end statements with a semicolon `;`.
+- Use `se` before the table list and `jahan` before filters.
+- For joins, do not use a separate Hinglish `join` keyword; list tables and use conditions in `jahan`.
+- If the parser reports an error, check for missing commas, parentheses, or keywords.
+- Use `group dwara` only when using aggregate functions.
+
+9. Example Query Patterns
+-------------------------
+Select all columns:
+  laye * se students;
+
+Select specific columns:
+  laye name, age se students;
+
+Select with condition:
+  laye * se students jahan age >= 18 aur grade = "A";
+
+Select with order:
+  laye * se students kram dwara age desc;
+
+Multiple tables:
+  laye s.name, c.course_name se students s, enrollments e, courses c jahan s.id = e.student_id aur e.course_id = c.course_id;
+
+Subquery example:
+  laye * se students jahan id in (laye student_id se enrollments jahan course_id = 101);
+
+Aggregate example:
+  laye department, avg(salary) se employees group dwara department;
